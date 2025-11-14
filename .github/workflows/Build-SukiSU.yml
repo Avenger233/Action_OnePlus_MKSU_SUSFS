@@ -198,23 +198,28 @@ jobs:
           cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
 
           if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
-          echo "正在给内核打zram补丁"
-          cp -r ../SukiSU_patch/other/zram/lz4k/include/linux/* ./common/include/linux
-          cp -r ../SukiSU_patch/other/zram/lz4k/lib/* ./common/lib
-          cp -r ../SukiSU_patch/other/zram/lz4k/crypto/* ./common/crypto
-          cp -r ../SukiSU_patch/other/zram/lz4k_oplus ./common/lib/
+            echo "正在给内核打zram补丁"
+            cp -r ../SukiSU_patch/other/zram/lz4k/include/linux/* ./common/include/linux
+            cp -r ../SukiSU_patch/other/zram/lz4k/lib/* ./common/lib
+            cp -r ../SukiSU_patch/other/zram/lz4k/crypto/* ./common/crypto
+            cp -r ../SukiSU_patch/other/zram/lz4k_oplus ./common/lib/
           fi
 
           cd ./common
           patch -p1 < 50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch || true
           echo "完成"
 
+          # 删除废弃的 devpts hook（支持 common 与 msm-kernel）
           if [ -f drivers/tty/pty.c ]; then
-          sed -i '/ksu_handle_devpts/d' drivers/tty/pty.c
-          echo "已删除 ksu_handle_devpts 行"
+            sed -i '/ksu_handle_devpts/d' drivers/tty/pty.c
+            echo "已从 common/drivers/tty/pty.c 删除 ksu_handle_devpts 行"
+          elif [ -f ../msm-kernel/drivers/tty/pty.c ]; then
+            sed -i '/ksu_handle_devpts/d' ../msm-kernel/drivers/tty/pty.c
+            echo "已从 msm-kernel/drivers/tty/pty.c 删除 ksu_handle_devpts 行"
           else
-          echo "drivers/tty/pty.c 不存在，跳过删除"
+            echo "未找到 pty.c 文件，跳过删除"
           fi
+
 
       - name: Apply Hide Stuff Patches
         run: |
