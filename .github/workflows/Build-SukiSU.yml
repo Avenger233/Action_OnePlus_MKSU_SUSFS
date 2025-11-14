@@ -209,18 +209,6 @@ jobs:
           patch -p1 < 50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch || true
           echo "完成"
 
-          # 删除废弃的 devpts hook（支持 common 与 msm-kernel）
-          if [ -f drivers/tty/pty.c ]; then
-            sed -i '/ksu_handle_devpts/d' drivers/tty/pty.c
-            echo "已从 common/drivers/tty/pty.c 删除 ksu_handle_devpts 行"
-          elif [ -f ../msm-kernel/drivers/tty/pty.c ]; then
-            sed -i '/ksu_handle_devpts/d' ../msm-kernel/drivers/tty/pty.c
-            echo "已从 msm-kernel/drivers/tty/pty.c 删除 ksu_handle_devpts 行"
-          else
-            echo "未找到 pty.c 文件，跳过删除"
-          fi
-
-
       - name: Apply Hide Stuff Patches
         run: |
           cd kernel_workspace/kernel_platform/common
@@ -248,16 +236,16 @@ jobs:
             echo '完成LZ4KD补丁'
           fi
       # 删除废弃的 devpts hook，避免编译报错
-      #- name: Remove obsolete devpts hook
-       # run: |
-        # echo "删除已弃用的 ksu_handle_devpts 调用"
-         #cd kernel_workspace/kernel_platform/common
-         #if [ -f drivers/tty/pty.c ]; then
-          #sed -i '/ksu_handle_devpts/d' drivers/tty/pty.c
-          # echo "ksu_handle_devpts 行已删除"
-         #else
-          #echo "drivers/tty/pty.c 文件不存在，跳过"
-         #fi
+      - name: Remove obsolete devpts hook
+        run: |
+         echo "删除已弃用的 ksu_handle_devpts 调用"
+         cd kernel_workspace/kernel_platform/common
+         if [ -f drivers/tty/pty.c ]; then
+          sed -i '/ksu_handle_devpts/d' drivers/tty/pty.c
+           echo "ksu_handle_devpts 行已删除"
+         else
+          echo "drivers/tty/pty.c 文件不存在，跳过"
+         fi
 
       # 配置信息
       - name: Add Configuration Settings
